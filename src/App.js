@@ -70,9 +70,13 @@ class App extends Component {
         "registered": 300,
         "latitude": 300,
         "longitude": 300,
-      }
+      },
+      copyOfData: Data.mock,
+      reRender: false
     }
 
+    this._renderFilterService = this._renderFilterService.bind(this);
+    this._filterResult = this._filterResult.bind(this);
     this._onColumnReorderEndCallback = this._onColumnReorderEndCallback.bind(this);
     this._rowExpandedGetter = this._rowExpandedGetter.bind(this);
     this._handleCollapseClick = this._handleCollapseClick.bind(this);
@@ -198,6 +202,47 @@ class App extends Component {
     })
   }
 
+  _filterResult(){
+
+    let selectedFilter = this.refs.selectFilter.options[this.refs.selectFilter.selectedIndex].value;
+
+    Data.mock = this.state.copyOfData; // reset original data
+
+    if(this.refs.filterKey.value.length > 0){
+      Data.mock = Data.mock.filter((item, index)=>{
+
+        let itemValue = item[selectedFilter] + '';
+        let textBoxValue = this.refs.filterKey.value + '';
+    
+        return(itemValue === textBoxValue);
+      });
+    }
+
+    this.setState({reRender: true});
+  }
+  _renderFilterService(){
+
+    return(
+    <div style={{"textAlign":"left"}}>
+      <p>Filter</p>
+      <input ref='filterKey' type = 'text'
+        onChange={this._filterResult}
+        />
+      <select ref='selectFilter' 
+        onChange={()=> {
+          this._filterResult()
+          }}>
+
+        {this.state.columnOrder.map(function(columnKey, index){
+          return(
+            <option key={index}>{columnKey}</option>
+          );
+        })}
+      </select>
+    </div>
+    )
+  }
+
   _paginationNext() {
 
   }
@@ -257,6 +302,7 @@ class App extends Component {
               />
             );
           })
+    
         }
           
         </DataTable>
@@ -273,6 +319,7 @@ class App extends Component {
           <button onClick={this._paginationBack}>Back</button>          
         </div>
         <div className="hide-columns">
+          {this._renderFilterService()}
           {this.state.copyOfColumnOrder.map(function(columnKey, index) {
             return (
               <div style={{"textAlign":"left"}} key={index}>
