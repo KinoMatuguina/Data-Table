@@ -6,7 +6,10 @@ import DataTable from './DataTable/DataTable'
 import {Cell, Column} from 'fixed-data-table-2';
 import {LinkCell, ImageCell, CollapseCell} from "./DataTableCell/DataTableCell"
 import Data from './Data'
-
+import _ from 'underscore';
+import by from 'sortby';
+// import FieldDirection from './DataTableCell/FieldDirection';
+import Fonticon from 'react-fontawesome';
 
 let expandStyles = {
   'background-color': 'white',
@@ -70,7 +73,10 @@ class App extends Component {
         "registered": 300,
         "latitude": 300,
         "longitude": 300,
-      }
+      },
+      sortData: {},
+      isVisible: false,
+      sortingIsActive: false,
     }
 
     this._onColumnReorderEndCallback = this._onColumnReorderEndCallback.bind(this);
@@ -82,6 +88,10 @@ class App extends Component {
     this._paginationGoto = this._paginationGoto.bind(this);
     this._changeMaxRow = this._changeMaxRow.bind(this);
     this._onColumnResizeEndCallback = this._onColumnResizeEndCallback.bind(this);
+    this._changeDataOrder = this._changeDataOrder.bind(this);
+    this._handleFieldsDirection = this._handleFieldsDirection.bind(this);
+    this._keyDown = this._keyDown.bind(this);
+    this._keyUp = this._keyUp.bind(this);
 
   }
 
@@ -214,13 +224,115 @@ class App extends Component {
     
   }
 
-  _onColumnResizeEndCallback() {
+  _onColumnResizeEndCallback(event, columnkey) {
     
   }
 
+  _keyDown(e) {
+    if(e.keyCode === 16) {
+      this.setState({
+        sortingIsActive: true
+      }, function(){
+        console.log(this.state.sortingIsActive)
+      })
+    }
+  }
+
+  _keyUp(e) {
+    if(e.keyCode === 16) {
+      this.setState({
+        sortingIsActive: false
+      }, function(){
+        console.log(this.state.sortingIsActive)
+      })
+      
+    }
+  }
+
+  getFieldsAndDirection(){
+    var sortedData = Data.mock.sort(by(this.state.sortData));
+    return sortedData;
+  }
+
+  _handleFieldsDirection(col) {
+    const dir = this.state.sortData;
+    const dirIsVisible = this.state.isVisible;
+
+    if(dirIsVisible !== false) {
+      if(dir[col] !== undefined) {
+        if(dir[col] === 1) {
+          return <Fonticon style={{"fontSize":"1.5em", "marginLeft": "40px"}} name="sort-up" />
+        } else {
+          return <Fonticon style={{"fontSize":"1.5em", "marginLeft": "40px"}} name="sort-down" />
+        }
+      } else{
+        return null
+      } 
+    }
+  }
+
+  _changeDataOrder(columnkey) {
+
+    if(this.state.sortingIsActive === true) {
+      var direction = 0;
+      // console.log("FIRST ATTEMPT LOG COLUMN KEY: " + this.state.sortData[columnkey]);
+      if (this.state.sortData[columnkey] >= 0 || this.state.sortData[columnkey] === undefined) {
+        direction = -1
+      } else {
+        direction = 1
+      }
+      this.setState({
+        sortData: {
+          ...this.state.sortData,  
+          [columnkey]: direction,
+        },
+        isVisible: true,
+      }, function() {
+        Data.mock = this.getFieldsAndDirection();
+        // console.log(this.state.sortData);
+        // console.log(this.state.isVisible);
+        // console.log("COLUMN KEY: " + columnkey + " DIRECTION: " + direction);
+        this.forceUpdate(); 
+      });	
+    } else {
+      var direction = 0;
+      // console.log("FIRST ATTEMPT LOG COLUMN KEY: " + this.state.sortData[columnkey]);
+      if (this.state.sortData[columnkey] >= 0 || this.state.sortData[columnkey] === undefined) {
+        direction = -1
+      } else {
+        direction = 1
+      }
+      this.setState({
+        sortData: {
+          [columnkey]: direction,
+        },
+        isVisible: true,
+      }, function() {
+        Data.mock = this.getFieldsAndDirection();
+        // console.log(this.state.sortData);
+        // console.log(this.state.isVisible);
+        // console.log("COLUMN KEY: " + columnkey + " DIRECTION: " + direction);
+        this.forceUpdate(); 
+      });	
+    }
+
+  }
+
+  componentDidMount() {
+    // console.log(this.state.isVisible)
+    this.setState({
+      isVisible: false,
+    })  
+  }
+
   render() {
+    const self = this;
     return (
-      <div className="App">
+      <div 
+        className="App"
+        onKeyDown={this._keyDown}
+        onKeyUp={this._keyUp}
+      >
         <DataTable 
           headerHeight={50} 
           rowsCount={Data.mock.length} 
@@ -247,13 +359,26 @@ class App extends Component {
               columnKey={columnKey}
               key={index}
               isReorderable={true}
-              header={<Cell>{columnKey}</Cell>}
+              width={200}
+              header={
+                <Cell 
+                  onClick={() => {self._changeDataOrder(columnKey)}}
+                  style={{"cursor": "pointer", "textTransform": "uppercase"}}
+                  
+                > 
+                  <span>
+                    {columnKey}
+                    {self._handleFieldsDirection(columnKey)}
+                  </span>    
+                </Cell>
+              }
               cell={props => (
                 <Cell {...props}>
-                  {Data.mock[props.rowIndex][columnKey]}
+                   {Data.mock[props.rowIndex][columnKey]}
                 </Cell>
+                
               )}
-              width={100}
+
               />
             );
           })

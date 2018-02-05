@@ -257,7 +257,7 @@ module.exports = Object.assign({
             },
             {
                 "id": 2,
-                "name": "Magdalena Pugh"
+                "name": "Magdalena Pugh"    
             }
         ],
         "greeting": "Hello, Reilly Mclean! You have 3 unread messages.",
@@ -314,7 +314,7 @@ module.exports = Object.assign({
         "isActive": false,
         "balance": "$3,838.12",
         "picture": "http://placehold.it/32x32",
-        "age": 25,
+        "age": 26,
         "eyeColor": "green",
         "name": "Ebony Odonnell",
         "gender": "female",
@@ -490,7 +490,7 @@ module.exports = Object.assign({
         "isActive": true,
         "balance": "$3,702.74",
         "picture": "http://placehold.it/32x32",
-        "age": 38,
+        "age": 39,
         "eyeColor": "green",
         "name": "Pamela Duke",
         "gender": "female",
@@ -622,7 +622,7 @@ module.exports = Object.assign({
         "isActive": false,
         "balance": "$1,628.59",
         "picture": "http://placehold.it/32x32",
-        "age": 20,
+        "age": 21,
         "eyeColor": "green",
         "name": "Mejia Cole",
         "gender": "male",
@@ -667,7 +667,7 @@ module.exports = Object.assign({
         "balance": "$3,838.12",
         "picture": "http://placehold.it/32x32",
         "age": 25,
-        "eyeColor": "green",
+        "eyeColor": "fink",
         "name": "Ebony Odonnell",
         "gender": "female",
         "company": "PRINTSPAN",
