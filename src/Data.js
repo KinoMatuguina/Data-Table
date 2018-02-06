@@ -1,6 +1,6 @@
 module.exports = Object.assign({
 	mock: [{
-        "_id": "5a5ec36cd849041cffd158c1",
+        "_id": "5a5ec36cd849041cffd158c14",
         "index": 0,
         "guid": "98b309b8-c0ad-4c3b-9d89-4577e99ce25e",
         "isActive": false,
@@ -44,13 +44,13 @@ module.exports = Object.assign({
         "favoriteFruit": "banana"
     },
     {
-        "_id": "5a5ec36c1c285fb96a2bec13",
+        "_id": "5a5ec36c1c285fb96a2bec135",
         "index": 1,
         "guid": "5e4a063a-021d-4d65-bbcd-ac4ed4cc8f25",
         "isActive": false,
         "balance": "$3,913.87",
         "picture": "http://placehold.it/32x32",
-        "age": 26,
+        "age": 25,
         "eyeColor": "brown",
         "name": "Serena Michael",
         "gender": "female",
@@ -88,7 +88,7 @@ module.exports = Object.assign({
         "favoriteFruit": "banana"
     },
     {
-        "_id": "5a5ec36c66be36f64e5ffa0b",
+        "_id": "5a5ec36c66be36f64e5ffa0b5",
         "index": 2,
         "guid": "565435a2-0b54-43c6-8196-776053c6d3f0",
         "isActive": false,
@@ -132,7 +132,7 @@ module.exports = Object.assign({
         "favoriteFruit": "strawberry"
     },
     {
-        "_id": "5a5ec36c02766112674afdcd",
+        "_id": "5a5ec36c02766112674afdcd5",
         "index": 3,
         "guid": "f4739621-d71a-4735-84ff-13a4d1dbbb35",
         "isActive": true,
@@ -220,7 +220,7 @@ module.exports = Object.assign({
         "favoriteFruit": "banana"
     },
     {
-        "_id": "5a5ec36c6d4154bc54234bbb",
+        "_id": "5fasdfasdf234345354jnkj",
         "index": 5,
         "guid": "fa454898-5be2-4ec1-9a28-5c389ceb7178",
         "isActive": false,
@@ -257,14 +257,14 @@ module.exports = Object.assign({
             },
             {
                 "id": 2,
-                "name": "Magdalena Pugh"
+                "name": "Magdalena Pugh"    
             }
         ],
         "greeting": "Hello, Reilly Mclean! You have 3 unread messages.",
         "favoriteFruit": "strawberry"
     },
     {
-        "_id": "5a5ec36c333e3dca2298e23b",
+        "_id": "5a5ec36c333e3dca2298e23b6",
         "index": 6,
         "guid": "7696d4e4-5928-45de-b05a-078345ad7e3e",
         "isActive": false,
@@ -308,13 +308,13 @@ module.exports = Object.assign({
         "favoriteFruit": "apple"
     },
     {
-        "_id": "5a5ec36ce5bc9cdc9d587ca2",
+        "_id": "5a5ec36ce5bc9cdc9d587ca22",
         "index": 7,
         "guid": "3667c91a-8bc5-47b2-8b9f-e360fc5934a6",
         "isActive": false,
         "balance": "$3,838.12",
         "picture": "http://placehold.it/32x32",
-        "age": 25,
+        "age": 26,
         "eyeColor": "green",
         "name": "Ebony Odonnell",
         "gender": "female",
@@ -352,7 +352,7 @@ module.exports = Object.assign({
         "favoriteFruit": "banana"
     },
     {
-        "_id": "5a5ec36cd849041cffd158c1",
+        "_id": "5a5ec36cd849041cffd158c14",
         "index": 0,
         "guid": "98b309b8-c0ad-4c3b-9d89-4577e99ce25e",
         "isActive": false,
@@ -407,7 +407,7 @@ module.exports = Object.assign({
         "name": "Serena Michael",
         "gender": "female",
         "company": "VICON",
-        "email": "serenamichael@vicon.com",
+        "email": "serenamichael1@vicon.com",
         "phone": "+1 (927) 547-2335",
         "address": "747 Ridge Court, Carrizo, Marshall Islands, 1977",
         "about": "Eiusmod adipisicing nostrud nulla adipisicing nulla id reprehenderit nisi et pariatur. Labore non occaecat culpa incididunt et reprehenderit reprehenderit dolore exercitation. Sint anim enim quis ipsum magna ex ullamco proident adipisicing aliquip eiusmod Lorem anim aliquip. Eu nostrud nisi proident anim nulla Lorem incididunt laborum anim tempor ex mollit.\r\n",
@@ -440,7 +440,7 @@ module.exports = Object.assign({
         "favoriteFruit": "banana"
     },
     {
-        "_id": "5a5ec36c66be36f64e5ffa0b",
+        "_id": "5a5ec36c66be36f64e5ffa0b6",
         "index": 2,
         "guid": "565435a2-0b54-43c6-8196-776053c6d3f0",
         "isActive": false,
@@ -490,7 +490,7 @@ module.exports = Object.assign({
         "isActive": true,
         "balance": "$3,702.74",
         "picture": "http://placehold.it/32x32",
-        "age": 38,
+        "age": 39,
         "eyeColor": "green",
         "name": "Pamela Duke",
         "gender": "female",
@@ -528,7 +528,7 @@ module.exports = Object.assign({
         "favoriteFruit": "apple"
     },
     {
-        "_id": "5a5ec36c524911b6e918b697",
+        "_id": "5a5ec36c524911b6e918b697b",
         "index": 4,
         "guid": "28bbe0bf-e1ed-4766-8fff-068e77483093",
         "isActive": false,
@@ -572,7 +572,7 @@ module.exports = Object.assign({
         "favoriteFruit": "banana"
     },
     {
-        "_id": "5a5ec36c6d4154bc54234bbb",
+        "_id": "5a5ec36c6d4154bc54234bbb5",
         "index": 5,
         "guid": "fa454898-5be2-4ec1-9a28-5c389ceb7178",
         "isActive": false,
@@ -622,7 +622,7 @@ module.exports = Object.assign({
         "isActive": false,
         "balance": "$1,628.59",
         "picture": "http://placehold.it/32x32",
-        "age": 20,
+        "age": 21,
         "eyeColor": "green",
         "name": "Mejia Cole",
         "gender": "male",
@@ -667,7 +667,7 @@ module.exports = Object.assign({
         "balance": "$3,838.12",
         "picture": "http://placehold.it/32x32",
         "age": 25,
-        "eyeColor": "green",
+        "eyeColor": "fink",
         "name": "Ebony Odonnell",
         "gender": "female",
         "company": "PRINTSPAN",

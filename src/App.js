@@ -1,337 +1,239 @@
 'use strict';
 
 import React, { Component } from 'react';
-import './App.css';
-import DataTable from './DataTable/DataTable'
 import {Cell, Column} from 'fixed-data-table-2';
 import {LinkCell, ImageCell, CollapseCell} from "./DataTableCell/DataTableCell"
+import F4DataTable from './F4DataTable/F4DataTable'
+import Fonticon from 'react-fontawesome';
 import Data from './Data'
 
+let columnOrder = [
+  "picture",
+  "name",
+  "email",
+  "options"
+]
 
-let expandStyles = {
-  'background-color': 'white',
-  border: '1px solid #d3d3d3',
-  'box-sizing': 'border-box',
-  padding: '20px',
-  overflow:'hidden',
-  width: '100%',
-  height: '100%'
-}
+let mockData = [
+  {
+    "name": "picture",
+    "type": "image",
+    "isReorderable": true,
+  },
+  {
+    "name": "name",
+    "type": "text",
+    "isReorderable": true,
+  },
+  {
+    "name": "email",
+    "type": "link",
+    "isReorderable": true,
+  },
+  {
+    "name": "email",
+    "type": "component",
+    "isReorderable": true,
+  }
+]
+
+// let columnWidth = {
+//   "name": 300,
+//   "picture": 50,
+//   "email": 300,
+// }
+
+let dataTableFunction;
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      collapsedRows: new Set(),
-      columnOrder: [
-        "balance",
-        "picture",
-        "age",
-        "eyeColor",
-        "name",
-        "gender",
-        "company",
-        "email",
-        "phone",
-        "address",
-        "about",
-        "registered",
-        "latitude",
-        "longitude"
-      ],
-      copyOfColumnOrder: [
-        "balance",
-        "picture",
-        "age",
-        "eyeColor",
-        "name",
-        "gender",
-        "company",
-        "email",
-        "phone",
-        "address",
-        "about",
-        "registered",
-        "latitude",
-        "longitude"
-      ],
+      dataTable: null,
+      dataSort: {},
       columnWidth: {
-        "balance": 300,
-        "picture": 300,
-        "age": 300,
-        "eyeColor": 300,
         "name": 300,
-        "gender": 300,
-        "company": 300,
+        "picture": 50,
         "email": 300,
-        "phone": 300,
-        "address": 300,
-        "about": 300,
-        "registered": 300,
-        "latitude": 300,
-        "longitude": 300,
-      },
-      copyOfData: Data.mock,
-      reRender: false
+      }
     }
 
-    this._renderFilterService = this._renderFilterService.bind(this);
-    this._filterResult = this._filterResult.bind(this);
-    this._onColumnReorderEndCallback = this._onColumnReorderEndCallback.bind(this);
-    this._rowExpandedGetter = this._rowExpandedGetter.bind(this);
-    this._handleCollapseClick = this._handleCollapseClick.bind(this);
-    this._subRowHeightGetter = this._subRowHeightGetter.bind(this);
-    this._paginationNext = this._paginationNext.bind(this);
-    this._paginationBack = this._paginationBack.bind(this);
-    this._paginationGoto = this._paginationGoto.bind(this);
-    this._changeMaxRow = this._changeMaxRow.bind(this);
     this._onColumnResizeEndCallback = this._onColumnResizeEndCallback.bind(this);
-
+    // this._clickGear = this._clickGear.bind(this);
+    // this._fieldDirection = this._fieldDirection.bind(this);
+    
   }
 
-  _rowExpandedGetter({rowIndex, width, height}) {
-    if (!this.state.collapsedRows.has(rowIndex)) {
-      return null;
-    }
-
-    const style = {
-      height: height,
-      width: width - 2,
-    };
-
-    return (
-      <div style={style}>
-        <div className={expandStyles}>
-            expanded content
-        </div>
-      </div>
-    );
-
-    console.log("_rowExpandedGetter")    
-    console.log(rowIndex);
-    console.log(width);
-    console.log(height);
-
+  componentDidMount(){
+    // console.log(this.state.dataTable);
   }
 
+  _sort(columnKey, event) {
+    // console.log(columnKey)
+    // let data = 
+    let self = this;
+    dataTableFunction._changeDataOrder(columnKey, function(data) {
+      console.log(data);
+      Data.mock = data.data;
+      self.setState({
+        dataSort: data.sortData
+      })
+    })
+    // console.log()
+ 
+  }
 
-  _handleCollapseClick(rowIndex) {
-    console.log("_handleCollapseClick")
-    console.log(rowIndex)
-
-    const {collapsedRows} = this.state;
-    const shallowCopyOfCollapsedRows = new Set([...collapsedRows]);
-    let scrollToRow = rowIndex;
-    if (shallowCopyOfCollapsedRows.has(rowIndex)) {
-      shallowCopyOfCollapsedRows.delete(rowIndex);
-      scrollToRow = null
-    } else {
-      shallowCopyOfCollapsedRows.add(rowIndex);
-    }
-
+  _onColumnResizeEndCallback(newColumnWidth, columnKey) {
+    
     this.setState({
-      collapsedRows: shallowCopyOfCollapsedRows
+      columnWidth : {
+        ...this.state.columnWidth,
+        [columnKey] : newColumnWidth
+      }
     }, function() {
-      console.log(this.state.collapsedRows)
-    });
-    
-
-  }
-
-  _subRowHeightGetter(index) {
-    return this.state.collapsedRows.has(index) ? 80 : 0;
-  }
-  
-
-  // method for reordering columns need to customize more for more usability.
-  // this method will work on for a simple table.
-  // need to improve more.
-  _onColumnReorderEndCallback(event) {
-    
-    const {columnOrder} = this.state;
-    
-    // getting position of the colums need to reorder 
-    let currentColIndex = columnOrder.indexOf(event.reorderColumn);
-    let nextColIndex = columnOrder.indexOf(event.columnAfter);
-
-    console.log("OLD COLUMN ORDER : " + columnOrder);
-    // removing the reorder column
-    columnOrder.splice(currentColIndex, 1);
-    // move the reorder column
-    columnOrder.splice(nextColIndex, 0, event.reorderColumn);
-    
-    console.log("NEW COLUMN ORDER : " + columnOrder);
-
-    console.log(currentColIndex);
-    console.log(nextColIndex);
-    
-    // setting sample data state.
-    this.setState({
-      columnOrder: columnOrder
-    }, function() {
-      console.log('DONE');
+      this.forceUpdate();
     })
+    console.log(this.state.columnWidth);
     
-    return columnOrder;
-
-  }
-
-  _showColumn(columnKey, event) {
+    console.log(newColumnWidth)
     console.log(columnKey)
-    let indexOfColumnKey = this.state.copyOfColumnOrder.indexOf(columnKey)
-    let shallowCopyOfColumnOrder = this.state.columnOrder
-    if (shallowCopyOfColumnOrder.indexOf(columnKey) === -1) {
-      shallowCopyOfColumnOrder.splice(indexOfColumnKey, 0, columnKey);
+
+  }
+
+  _fieldDirection(columnKey) {
+    const dir = this.state.dataSort;
+    
+    if(dir[columnKey] !== undefined) {
+      console.log("Has column key")
+      if(dir[columnKey] === 1) {
+        console.log("returning up")    
+        return <Fonticon style={{"fontSize":"1.5em", "marginLeft": "40px"}} name="sort-up" />
+      } else {
+        console.log("returning down")            
+        return <Fonticon style={{"fontSize":"1.5em", "marginLeft": "40px"}} name="sort-down" />
+      }
+    } else{
+      console.log("returning null")            
+      return null
     }
-
-    this.setState({
-      columnOrder: shallowCopyOfColumnOrder
-    })
   }
 
-  _hideColumn(columnKey, event) {
-    console.log(columnKey)
-    let shallowCopyOfColumnOrder = this.state.columnOrder
-    let columnIndex = shallowCopyOfColumnOrder.indexOf(columnKey);
-    if (columnIndex !== -1) {
-      shallowCopyOfColumnOrder.splice(columnIndex, 1);
-    }
-    
-    this.setState({
-      columnOrder: shallowCopyOfColumnOrder
-    })
-  }
-
-  _filterResult(){
-
-    let selectedFilter = this.refs.selectFilter.options[this.refs.selectFilter.selectedIndex].value;
-
-    Data.mock = this.state.copyOfData; // reset original data
-
-    if(this.refs.filterKey.value.length > 0){
-      Data.mock = Data.mock.filter((item, index)=>{
-
-        let itemValue = item[selectedFilter] + '';
-        let textBoxValue = this.refs.filterKey.value + '';
-    
-        return(itemValue === textBoxValue);
-      });
-    }
-
-    this.setState({reRender: true});
-  }
-  _renderFilterService(){
-
-    return(
-    <div style={{"textAlign":"left"}}>
-      <p>Filter</p>
-      <input ref='filterKey' type = 'text'
-        onChange={this._filterResult}
-        />
-      <select ref='selectFilter' 
-        onChange={()=> {
-          this._filterResult()
-          }}>
-
-        {this.state.columnOrder.map(function(columnKey, index){
-          return(
-            <option key={index}>{columnKey}</option>
-          );
-        })}
-      </select>
-    </div>
-    )
-  }
-
-  _paginationNext() {
-
-  }
-
-  _paginationBack() {
-
-  }
-
-  _paginationGoto() {
-    
-  }
-
-  _changeMaxRow() {
-    
-  }
-
-  _onColumnResizeEndCallback() {
-    
+  _clickGear(data) {
+    console.log(data);
   }
 
   render() {
-    return (
-      <div className="App">
-        <DataTable 
-          headerHeight={50} 
-          rowsCount={Data.mock.length} 
-          onColumnReorderEndCallback={this._onColumnReorderEndCallback}
-          onColumnResizeEndCallback={this._onColumnResizeEndCallback}
-          subRowHeightGetter={this._subRowHeightGetter}
-          rowExpanded={this._rowExpandedGetter}
-          rowHeight={50}
-          isColumnReordering={false} 
-          width={1000} 
-          height={500}
-          {...this.props}>
-          
-          <Column
-            cell={<CollapseCell callback={this._handleCollapseClick} collapsedRows={this.state.collapsedRows} />}
-            fixed={true}
-            width={30}
-          />
-        {
-          this.state.columnOrder.map(function(columnKey, index) {
-            return (
-              <Column
-              allowCellsRecycling={true}
-              columnKey={columnKey}
-              key={index}
-              isReorderable={true}
-              header={<Cell>{columnKey}</Cell>}
-              cell={props => (
-                <Cell {...props}>
-                  {Data.mock[props.rowIndex][columnKey]}
-                </Cell>
-              )}
-              width={100}
-              />
-            );
-          })
-    
+    return (<F4DataTable
+      data={Data.mock}
+      columnOrder={columnOrder}
+      onColumnResize={this._onColumnResizeEndCallback}
+      hasSelectAll={false}
+      isReorderable={true}
+      isResizable={true}
+      rowHeight={50}
+      headerHeight={50}
+      tableHeigth={500}
+      tableWidth={1000}
+      tableRef={el => { dataTableFunction = el; console.log(dataTableFunction) }}
+     >
+     <Column
+        allowCellsRecycling={true}
+        columnKey={"picture"}
+        key={"picture"}
+        isReorderable={false}
+        isResizable={true}    
+        width={50}
+        header={
+          <Cell> 
+            <span>
+              {this._fieldDirection("picture")}
+            </span>    
+          </Cell>
         }
+        cell={props => (
+          <ImageCell src={(Data.mock.length !== 0) ? Data.mock[props.rowIndex]["picture"] : null} />
+        )}
+        width={this.state.columnWidth["picture"]}
+        
+      />
+      
+      <Column
+        allowCellsRecycling={true}
+        columnKey={"name"}
+        key={"name"}        
+        isReorderable={true}
+        isResizable={true}
+        width={200}
+        header={
+          <Cell 
+            onClick={this._sort.bind(this, "name")}
+            style={{"cursor": "pointer", "textTransform": "uppercase"}}
+          > 
+            <span>
+              {"name"}
+              {this._fieldDirection("name")}
+            </span>    
+          </Cell>
+        }
+        cell={props => (
+          <Cell {...props}>
+            {
+              (Data.mock.length !== 0) ? Data.mock[props.rowIndex]["name"] : null
+            }
+          </Cell>
           
-        </DataTable>
-        <div className="pagination">
-          <input type="text" />
-          <select>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>         
-          <button onClick={this._paginationNext}>Next</button>
-          <button onClick={this._paginationBack}>Back</button>          
-        </div>
-        <div className="hide-columns">
-          {this._renderFilterService()}
-          {this.state.copyOfColumnOrder.map(function(columnKey, index) {
-            return (
-              <div style={{"textAlign":"left"}} key={index}>
-                  <p>{columnKey}</p>
-                  <button onClick={this._showColumn.bind(this, columnKey)}>show</button>
-                  <button onClick={this._hideColumn.bind(this, columnKey)}>hide</button>                  
-              </div>
-            );
-          }, this)}
-        </div>
-      </div>
-    );
+        )}
+        width={this.state.columnWidth["name"]}
+        
+      />
+      <Column
+        allowCellsRecycling={true}
+        columnKey={"email"}
+        key={"email"}
+        isReorderable={true}
+        width={200}
+        isResizable={true}        
+        header={
+          <Cell 
+            onClick={this._sort.bind(this, "email")}
+            style={{"cursor": "pointer", "textTransform": "uppercase"}}
+          > 
+            <span>
+              {"email"}
+              {this._fieldDirection("email")}
+            </span>    
+          </Cell>
+        }
+        cell={props => (
+          <LinkCell target={"_blank"} link={(Data.mock.length !== 0) ? "mailto:" + Data.mock[props.rowIndex]["email"] : null} >
+            {Data.mock[props.rowIndex]["email"]}
+          </LinkCell>
+        )}
+        width={this.state.columnWidth["email"]}
+        
+      />
+      <Column
+        allowCellsRecycling={true}
+        columnKey={"options"}
+        key={"options"}        
+        isReorderable={true}
+        width={200}
+        isResizable={true}        
+        header={
+          <Cell>  
+          </Cell>
+        }
+        cell={props => (
+          <Cell {...props}>
+            <Fonticon name={"gear"} onClick={this._clickGear.bind(this, Data.mock[props.rowIndex])} />
+          </Cell>
+          
+        )}
+        width={50}
+        
+      />
+      
+     </F4DataTable>)
   }
 }
 
