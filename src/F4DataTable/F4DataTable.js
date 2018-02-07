@@ -39,7 +39,8 @@ class F4DataTable extends Component {
       activePage: 1,
       itemsPerPage: 10,
       cells: React.Children.toArray(this.props.children),
-      
+      copyOfCells: React.Children.toArray(this.props.children),
+      filter: this.props.columnOrder[0]
       
     }
 
@@ -63,6 +64,7 @@ class F4DataTable extends Component {
     this._handlePagination = this._handlePagination.bind(this);
     this._handleInputPagination = this._handleInputPagination.bind(this);
     this._handleRowCount = this._handleRowCount.bind(this);
+    this._handleChangeFilter = this._handleChangeFilter.bind(this);
 
   }
 
@@ -184,56 +186,97 @@ class F4DataTable extends Component {
 
   _showColumn(columnKey, event) {
     console.log(columnKey)
-    let indexOfColumnKey = this.state.copyOfColumnOrder.indexOf(columnKey)
-    let shallowCopyOfColumnOrder = this.state.columnOrder
-    if (shallowCopyOfColumnOrder.indexOf(columnKey) === -1) {
-      shallowCopyOfColumnOrder.splice(indexOfColumnKey, 0, columnKey);
-    }
+    const {cells, copyOfCells} = this.state;
 
-    this.setState({
-      columnOrder: shallowCopyOfColumnOrder
-    })
+    let currentCelllIndex = _.findIndex(cells, function(data) { return data.key == ".$" + columnKey })
+    let currentCelllCopyIndex = _.findIndex(copyOfCells, function(data) { return data.key == ".$" + columnKey })
+    var newCells = cells;
+    let copyCellData = copyOfCells[currentCelllCopyIndex]
+    let cellData = cells[currentCelllIndex]
+
+    // cells.splice(indexOfColumnKey, 0, copyCellData);
+    
+    if (currentCelllIndex === -1) {
+      cells.splice(currentCelllCopyIndex, 0, copyCellData);
+      this.setState({
+        cells: cells
+      })
+    }
+    
+    // let indexOfColumnKey = this.state.copyOfColumnOrder.indexOf(columnKey)
+    // let shallowCopyOfColumnOrder = this.state.columnOrder
+    
+    
+    // let currentColIndex = _.findIndex(cells, function(data) { return data.key == ".$" + event.reorderColumn })
+    // this.setState({
+    //   columnOrder: shallowCopyOfColumnOrder
+    // })
   }
 
   _hideColumn(columnKey, event) {
-    console.log(columnKey)
-    let shallowCopyOfColumnOrder = this.state.columnOrder
-    let columnIndex = shallowCopyOfColumnOrder.indexOf(columnKey);
-    if (columnIndex !== -1) {
-      shallowCopyOfColumnOrder.splice(columnIndex, 1);
-    }
+    const {cells, copyOfCells} = this.state;
     
-    this.setState({
-      columnOrder: shallowCopyOfColumnOrder
-    })
+    // console.log(columnKey)
+    // let shallowCopyOfColumnOrder = this.state.columnOrder
+    // let columnIndex = shallowCopyOfColumnOrder.indexOf(columnKey);
+    // if (columnIndex !== -1) {
+    //   shallowCopyOfColumnOrder.splice(columnIndex, 1);
+    // }
+    
+    // this.setState({
+    //   columnOrder: shallowCopyOfColumnOrder
+    // })
+    let currentCelllIndex = _.findIndex(cells, function(data) { return data.key == ".$" + columnKey })
+    let currentCelllCopyIndex = _.findIndex(copyOfCells, function(data) { return data.key == ".$" + columnKey })
+    // var newCells = cells;
+    let copyCellData = copyOfCells[currentCelllCopyIndex]
+    let cellData = cells[currentCelllIndex]
+
+    console.log(currentCelllIndex)
+    console.log(currentCelllCopyIndex)
+    console.log(copyCellData)
+    console.log(cellData)
+    
+    if (currentCelllIndex !== -1) {
+      cells.splice(currentCelllIndex, 1)
+      this.setState({
+        cells: cells
+      })
+    }
+
+    
+    
   }
 
   _filterResult(){
     const { data } = this.props.data
-    let selectedFilter = this.refs.selectFilter.options[this.refs.selectFilter.selectedIndex].value;
-
-    // Data.mock = this.state.copyOfData; // reset original data
-    this.setState({
-        data: this.state.copyOfData
-    }, function() {
-        if(this.refs.filterKey.value.length > 0){
-            var filteredData = this.state.data.filter((item, index)=>{
-      
-              let itemValue = item[selectedFilter] + '';
-              let textBoxValue = this.refs.filterKey.value + '';
-          
-              return(itemValue === textBoxValue);
-            });
-      
-            this.setState({
-                data: filteredData,
-                reRender: false
-            });
-          }
-    })
-
+    let textBoxValue = this.refs.filterKey.value.toUpperCase() + '';
     
+    // let selectedFilter = this.refs.selectFilter.options[this.refs.selectFilter.selectedIndex].value;
+    // let currentCelllIndex = _.findIndex(this.state.data, function(data) { return data.key == ".$" + columnKey })
+    var filteredData = _.where(this.state.data, {[this.state.filter]: textBoxValue})
+    console.log(filteredData)
+    console.log(this.state.data)
+    console.log({[this.state.filter]: textBoxValue})
+    // Data.mock = this.state.copyOfData; // reset original data
+    // this.setState({
+    //     data: this.state.copyOfData
+    // }, function() {
+    //     if(this.refs.filterKey.value.length > 0){
+    //         var filteredData = this.state.data.filter((item, index)=>{
+      
+    //           let itemValue = item[this.state.filter].toUpperCase() + '';
+    //           console.log(itemValue === textBoxValue)
+    //           // console.log()
+              
+    //           // return(itemValue === textBoxValue);
+    //         });
+    //       }
+    // })
+    
+  }
 
+  _handleChangeFilter(event) {
     
   }
 
@@ -246,13 +289,11 @@ class F4DataTable extends Component {
         onChange={this._filterResult}
         />
       <select ref='selectFilter' 
-        onChange={()=> {
-          this._filterResult()
-          }}>
+        onChange={this._handleChangeFilter.bind(this)} value={this.state.filter}>
 
         {this.state.columnOrder.map(function(columnKey, index){
           return(
-            <option key={index}>{columnKey}</option>
+            <option value={columnKey} key={index}>{columnKey}</option>
           );
         })}
       </select>
@@ -388,6 +429,7 @@ class F4DataTable extends Component {
   _changeDataOrder(columnkey, callback) {
     console.log("Page trigger outside")
     if(this.state.sortingIsActive === true) {
+      console.log("multi sort")
       var direction = 0;
       // console.log("FIRST ATTEMPT LOG COLUMN KEY: " + this.state.sortData[columnkey]);
       if (this.state.sortData[columnkey] >= 0 || this.state.sortData[columnkey] === undefined) {
@@ -412,12 +454,13 @@ class F4DataTable extends Component {
             if (typeof callback === "function") {
               callback({data: this.state.data, sortData: this.state.sortData})
             }
-            return {data: this.state.data, sortData: this.state.sortData}
+            // return {data: this.state.data, sortData: this.state.sortData}
         })
         // console.log(this.state.isVisible);
         // console.log("COLUMN KEY: " + columnkey + " DIRECTION: " + direction);
       });	
     } else {
+      console.log("single sort")
       var direction = 0;
       // console.log("FIRST ATTEMPT LOG COLUMN KEY: " + this.state.sortData[columnkey]);
       if (this.state.sortData[columnkey] >= 0 || this.state.sortData[columnkey] === undefined) {
@@ -435,13 +478,13 @@ class F4DataTable extends Component {
         this.setState({
             data: this.getFieldsAndDirection()
         }, function() {
-            this.forceUpdate(); 
+            // this.forceUpdate(); 
         })
         console.log(this.state.sortData);
         if (typeof callback === "function") {
           callback({data: this.state.data, sortData: this.state.sortData})
         }
-        return {data: this.state.data, sortData: this.state.sortData}
+        // return {data: this.state.data, sortData: this.state.sortData}
         // console.log(this.state.isVisible);
         // console.log("COLUMN KEY: " + columnkey + " DIRECTION: " + direction);
         
@@ -633,7 +676,7 @@ class F4DataTable extends Component {
                 
         </div>
         <div className="hide-columns">
-          {this._renderFilterService()}
+          {/* {this._renderFilterService()} */}
           {this.state.copyOfColumnOrder.map(function(columnKey, index) {
             return (
               <div style={{"textAlign":"left"}} key={index}>

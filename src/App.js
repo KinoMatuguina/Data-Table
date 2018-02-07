@@ -50,7 +50,7 @@ class App extends Component {
     super(props);
     this.state = {
       dataTable: null,
-      dataSort: {},
+      sortedData: {},
       columnWidth: {
         "name": 300,
         "picture": 50,
@@ -68,19 +68,26 @@ class App extends Component {
     // console.log(this.state.dataTable);
   }
 
-  _sort(columnKey, event) {
-    // console.log(columnKey)
-    // let data = 
-    let self = this;
-    dataTableFunction._changeDataOrder(columnKey, function(data) {
-      console.log(data);
-      Data.mock = data.data;
-      self.setState({
-        dataSort: data.sortData
-      })
-    })
-    // console.log()
- 
+  
+
+  _filterResult(){
+    
+      // let selectedFilter = this.refs.selectFilter.options[this.refs.selectFilter.selectedIndex].value;
+      // console.log(selectedFilter)
+      // Data.mock = this.state.copyOfData; // reset original data
+  
+      // if(this.refs.filterKey.value.length > 0){
+      //   Data.mock = Data.mock.filter((item, index)=>{
+  
+      //     let itemValue = item[selectedFilter] + '';
+      //     let textBoxValue = this.refs.filterKey.value + '';
+      
+      //     return(itemValue === textBoxValue);
+      //   });
+      // }
+  
+      // this.setState({reRender: true});
+      console.log("kino")
   }
 
   _onColumnResizeEndCallback(newColumnWidth, columnKey) {
@@ -100,40 +107,62 @@ class App extends Component {
 
   }
 
-  _fieldDirection(columnKey) {
-    const dir = this.state.dataSort;
-    
-    if(dir[columnKey] !== undefined) {
-      console.log("Has column key")
-      if(dir[columnKey] === 1) {
-        console.log("returning up")    
-        return <Fonticon style={{"fontSize":"1.5em", "marginLeft": "40px"}} name="sort-up" />
-      } else {
-        console.log("returning down")            
-        return <Fonticon style={{"fontSize":"1.5em", "marginLeft": "40px"}} name="sort-down" />
-      }
-    } else{
-      console.log("returning null")            
-      return null
-    }
+  _sort(columnKey, event) {
+    let self = this;
+    dataTableFunction._changeDataOrder(columnKey, function(data) {
+      console.log(data);
+      Data.mock = data.data;
+      self.setState({
+        sortedData: data.sortData
+      }, function() {
+        
+      })
+    })
+
   }
+
+  _fieldDirection(columnKey) {
+    // const dir = this.state.dataSort;
+    
+    // if(this.state.sortedData[columnKey] !== undefined) {
+    //   if(this.state.sortedData[columnKey] === 1) {
+    //     document.getElementById("column"+columnKey).className = "column-"+columnKey + " sort-up"
+    //   } else {          
+    //     document.getElementById("column"+columnKey).className = "column-"+columnKey + " sort-down"
+    //   }
+    // } else{
+    //   document.getElementById("column"+columnKey).className = "column-"+columnKey
+    // }
+    console.log(document.getElementById(columnKey))
+    // console.log()
+  }
+
+  // componentDidMount() {}
 
   _clickGear(data) {
     console.log(data);
   }
 
+  _handleChangeFilter(event, value) {
+    // console.log(value)
+  }
+
+
   render() {
+    let self = this;
     return (<F4DataTable
       data={Data.mock}
       columnOrder={columnOrder}
       onColumnResize={this._onColumnResizeEndCallback}
-      hasSelectAll={false}
+      filterResult={this._filterResult.bind(this)}
+      hasSelectAll={true}
       isReorderable={true}
       isResizable={true}
       rowHeight={50}
       headerHeight={50}
       tableHeigth={500}
       tableWidth={1000}
+      
       tableRef={el => { dataTableFunction = el; console.log(dataTableFunction) }}
      >
      <Column
@@ -146,7 +175,6 @@ class App extends Component {
         header={
           <Cell> 
             <span>
-              {this._fieldDirection("picture")}
             </span>    
           </Cell>
         }
@@ -160,7 +188,7 @@ class App extends Component {
       <Column
         allowCellsRecycling={true}
         columnKey={"name"}
-        key={"name"}        
+        key={"name"}  
         isReorderable={true}
         isResizable={true}
         width={200}
@@ -169,10 +197,11 @@ class App extends Component {
             onClick={this._sort.bind(this, "name")}
             style={{"cursor": "pointer", "textTransform": "uppercase"}}
           > 
-            <span>
-              {"name"}
-              {this._fieldDirection("name")}
-            </span>    
+            
+            <p id="name">
+              <span>{"name"}</span>
+            </p>
+            {this._fieldDirection("name")}
           </Cell>
         }
         cell={props => (
@@ -198,10 +227,12 @@ class App extends Component {
             onClick={this._sort.bind(this, "email")}
             style={{"cursor": "pointer", "textTransform": "uppercase"}}
           > 
-            <span>
+            
+            <span id="email">
               {"email"}
-              {this._fieldDirection("email")}
-            </span>    
+              
+            </span>  
+            {this._fieldDirection("email")}  
           </Cell>
         }
         cell={props => (

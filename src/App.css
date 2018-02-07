@@ -31,6 +31,16 @@
   height: 50px;
   width: 50px;  
 }
+.hidden {
+  display: none;
+}
+
+.sort-up::after {
+  content: "\2191";
+}
+.sort-down::after {
+  content: "\2193";
+}
 
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
