@@ -1,6 +1,7 @@
-/**
- * Copyright Schrodinger, LLC
- */
+/*
+DATA CELL
+AUTHOR: KINO MATUGUINA
+*/
 
 "use strict";
 
@@ -61,7 +62,7 @@ class ImageCell extends React.PureComponent {
   render() {
     const {imageClass, src, ...props} = this.props;
     return (
-      <div className={"imageCell " + imageClass} style={{"backgroundImage": "url(" + src + ")"}}></div>
+      <div {...props} className={"imageCell " + imageClass} style={{"backgroundImage": "url(" + src + ")"}}></div>
     )
   }
 };

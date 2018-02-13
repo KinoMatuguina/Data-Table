@@ -1,3 +1,8 @@
+/*
+DATA TABLE
+AUTHOR: KINO MATUGUINA
+*/
+
 'use strict';
 
 import React, { Component } from 'react';
@@ -7,10 +12,12 @@ import {Cell, Column} from 'fixed-data-table-2';
 import {LinkCell, ImageCell, CollapseCell} from "../DataTableCell/DataTableCell"
 import Data from '../Data'
 import _ from 'underscore';
+import Clipboard from 'react-clipboard.js';
 import by from 'sortby';
 // import FieldDirection from './DataTableCell/FieldDirection';
 import Fonticon from 'react-fontawesome';
 import Pagination from "react-js-pagination";
+var json2csv = require('json2csv');
 
 let expandStyles = {
   'background-color': 'white',
@@ -49,13 +56,17 @@ class App extends Component {
       copyOfData: this.props.data,
       reRender: false,
       sortData: {},
+      serverSideSortData: [],
       isVisible: false,
       sortingIsActive: false,
       itemsPerPage: this.props.itemsPerPage,
       sortingIsActive: false,
       listOfData: [],
-      activePage: 1
-
+      activePage: 1,
+      clickData: {},
+      currentProps: null,
+      allSelected: false,
+      copyToClipBoardData: ""
     }
 
     this._renderFilterService = this._renderFilterService.bind(this);
@@ -77,7 +88,9 @@ class App extends Component {
     this._handleInputPagination = this._handleInputPagination.bind(this);
     this._handleRowCount = this._handleRowCount.bind(this);
     this._selectAll = this._selectAll.bind(this);
-    this._selectColumn = this._selectColumn.bind(this); 
+    this._selectColumn = this._selectColumn.bind(this);
+    this._copyToClipBoard = this._copyToClipBoard.bind(this);
+    // this._clickAbstractCell = this._clickAbstractCell.bind(this);
   }
 
   _rowExpandedGetter({rowIndex, width, height}) {
@@ -171,6 +184,8 @@ class App extends Component {
 
   _handleShowHide(data, event) {
     var value = event.target.checked;
+    console.log("showHideDATA")
+    console.log(data)
     if (value) {
         this._showColumn(data)
     } else {
@@ -250,7 +265,7 @@ class App extends Component {
 
         {this.state.columnOrder.map(function(columnKey, index){
           return(
-            <option key={index}>{columnKey.name}</option>
+            <option key={index}>{columnKey.headerTitle || columnKey.name}</option>
           );
         })}
       </select>
@@ -274,8 +289,20 @@ class App extends Component {
     
   }
 
-  _onColumnResizeEndCallback(event, columnkey) {
+  _onColumnResizeEndCallback(newColumnWidth, columnKey) {
+    console.log(newColumnWidth);
+    console.log(columnKey);
+    let normalIndex =  _.findIndex(this.state.columnOrder, function(data) { return data.name == columnKey })
+    let cloneData = this.state.columnOrder;
     
+    cloneData[normalIndex].width = newColumnWidth;
+    this.setState({
+      columnOrder: cloneData
+    })
+    console.log(cloneData)
+    console.log(this.state.columnOrder[normalIndex])
+    console.log(normalIndex)
+  
   }
 
   _keyDown(e) {
@@ -300,7 +327,7 @@ class App extends Component {
   }
 
   getFieldsAndDirection(){
-    var sortedData = this.state.data.sort(by(this.state.sortData));
+    var sortedData = this.state.copyOfData.sort(by(this.state.sortData));
     return sortedData;
   }
 
@@ -323,14 +350,32 @@ class App extends Component {
 
   _changeDataOrder(columnkey) {
 
+    const { onSortCallback, isServerSideSort } = this.props;
+
+    // function createServerSideSort() {
+    //   if (isServerSideSort) {
+    //     if (typeof onSortCallback === "function") {
+    //       onSortCallback()
+    //     }
+    //   }
+    // }
+    
+    let direction = 0;
+    let directionInWord = ""
+    // console.log("FIRST ATTEMPT LOG COLUMN KEY: " + this.state.sortData[columnkey]);
+    if (this.state.sortData[columnkey] >= 0 || this.state.sortData[columnkey] === undefined) {
+      direction = -1
+      directionInWord = "DESC"
+    } else {
+      direction = 1
+      directionInWord = "ASC"
+    }
+
+    const copyOfServerSideSort = this.state.serverSideSortData;
+    let columnIndex =  _.findIndex(this.state.serverSideSortData, function(data) { return data.fieldName == columnkey })    
+    // MULTIPLE SORTING 
+    
     if(this.state.sortingIsActive === true) {
-      var direction = 0;
-      // console.log("FIRST ATTEMPT LOG COLUMN KEY: " + this.state.sortData[columnkey]);
-      if (this.state.sortData[columnkey] >= 0 || this.state.sortData[columnkey] === undefined) {
-        direction = -1
-      } else {
-        direction = 1
-      }
       this.setState({
         sortData: {
           ...this.state.sortData,  
@@ -338,49 +383,129 @@ class App extends Component {
         },
         isVisible: true,
       }, function() {
-        this.state.data = this.getFieldsAndDirection();
-        // console.log(this.state.sortData);
-        // console.log(this.state.isVisible);
-        // console.log("COLUMN KEY: " + columnkey + " DIRECTION: " + direction);
+        if (isServerSideSort) {
+          
+          if (columnIndex === -1) {
+            if (this.state.sortData[columnkey] === undefined) {
+              copyOfServerSideSort.push({
+                fieldName: columnkey,
+                direction: directionInWord
+              })
+              this.setState({
+                serverSideSortData: copyOfServerSideSort
+              }, function() {
+                if (onSortCallback) {
+                  if (typeof onSortCallback === "function") {
+                    onSortCallback(this.state.serverSideSortData)
+                  }
+                }
+              })
+            } else {
+              copyOfServerSideSort.push({
+                fieldName: columnkey,
+                direction: (this.state.sortData[columnkey] === -1) ? "DESC" : "ASC"
+              })
+            }
+          } else {
+            if (copyOfServerSideSort[columnIndex].direction === "ASC") {
+              copyOfServerSideSort[columnIndex].direction = "DESC"
+            } else {
+              copyOfServerSideSort[columnIndex].direction = "ASC"
+            }
+      
+            this.setState({
+              serverSideSortData: copyOfServerSideSort
+            }, function() {
+              if (onSortCallback) {
+                if (typeof onSortCallback === "function") {
+                  onSortCallback(this.state.serverSideSortData)
+                }
+              }
+            })
+          }
+
+        } else {
+          this.state.data = this.getFieldsAndDirection();
+        }
+
+        this._handlePagination()
         this.forceUpdate(); 
       });	
     } else {
-      var direction = 0;
-      // console.log("FIRST ATTEMPT LOG COLUMN KEY: " + this.state.sortData[columnkey]);
-      if (this.state.sortData[columnkey] >= 0 || this.state.sortData[columnkey] === undefined) {
-        direction = -1
-      } else {
-        direction = 1
-      }
       this.setState({
         sortData: {
           [columnkey]: direction,
         },
         isVisible: true,
       }, function() {
-        this.state.data = this.getFieldsAndDirection();
-        // console.log(this.state.sortData);
-        // console.log(this.state.isVisible);
-        // console.log("COLUMN KEY: " + columnkey + " DIRECTION: " + direction);
+        if (isServerSideSort) {
+          this.setState({
+            serverSideSortData: [
+              {
+                fieldName: columnkey,
+                direction: directionInWord
+              }
+            ]
+          }, function() {
+            // console.log(JSON.stringify(this.state.serverSideSortData))
+            if (onSortCallback) {
+              if (typeof onSortCallback === "function") {
+                onSortCallback(this.state.serverSideSortData)
+              }
+            }
+          })
+        } else {
+          this.state.data = this.getFieldsAndDirection();
+        }
+        
+        this._handlePagination()
         this.forceUpdate(); 
       });	
     }
 
+    
+    
+
   }
 
   componentDidMount() {
-    // console.log(this.state.isVisible)
-    this.setState({
-      isVisible: false,
-    }, function() {
-      this._handlePagination()
-    })  
+    let self = this;
+    this.state.columnOrder.map(function(columnKey, index) {
+      // this._handleShowHide(this, columnKey.name)
+      if (columnKey.isNotHidden) {
+        this._showColumn(columnKey.name)
+      } else {
+        this._hideColumn(columnKey.name)        
+      }
+    }, this)
+
+    this._handlePagination()
+    // if (this.props.defaultSort) {
+    //   this.setState({
+    //     isVisible: true,
+    //     data: this.state.copyOfData.sort(by(this.props.defaultSort))
+    //   }, function() {
+    //     
+    //   })
+    // } else {
+    //   this.setState({
+    //     isVisible: false,
+    //     data: this.state.data.sort(by(this.props.defaultSort))
+    //   }, function() {
+    //     this._handlePagination()
+    //   })
+    // }
+
+      
   }
 
   _handlePagination(pageNumber) {
+    const { isServerSidePagination, onPaginationCallback, defaultSortParameter } = this.props
     console.log(pageNumber);
     this.setState({
-      activePage: pageNumber
+      allSelected: false,
+      activePage: pageNumber,
+      listOfData: []
     }, function() {
       let page = this.state.activePage
       let per_page = this.state.itemsPerPage
@@ -388,41 +513,68 @@ class App extends Component {
       let paginatedItems = _.rest(this.state.copyOfData, offset).slice(0, per_page);
       // let ShallowCopyOfList = this.state.data;
       console.log(paginatedItems);
-      this.setState({
-        data: paginatedItems
-      }, function() {
-        this.state.data = paginatedItems    
-        this.forceUpdate()
-      })
+      if (isServerSidePagination) {
+        if (onPaginationCallback) {
+          if (typeof onPaginationCallback === "function") {
+            if (this.state.serverSideSortData.length !== 0) {
+              onPaginationCallback({page: page, itemsPerPage: per_page, sort: this.state.serverSideSortData}) 
+            } else {
+              onPaginationCallback({page: page, itemsPerPage: per_page, sort: defaultSortParameter})     
+            }
+          }
+        }
+      } else {
+        this.setState({
+          data: paginatedItems
+        }, function() {
+          this.state.data = paginatedItems    
+          this.forceUpdate()
+        })
+      }
+      document.getElementsByName('checkboxHeader').checked = false;
     }, function() {
       this.forceUpdate()
     })
   }
 
   _handleInputPagination(event) {
+    const { isServerSidePagination, onPaginationCallback, defaultSortParameter } = this.props    
     var value = event.target.value;
     var totalPageCount = Math.ceil(this.state.copyOfData.length / this.state.itemsPerPage)
     console.log(value)
     console.log(totalPageCount)
     console.log(totalPageCount >= value);
     console.log(0 < value)
+    document.getElementsByName('checkboxHeader').checked = false;
     if (totalPageCount >= value && 0 < value) {
       this.setState({
-        activePage: value
+        allSelected: false,
+        activePage: value,
+        listOfData: []
       }, function() {
         let page = this.state.activePage
         let per_page = this.state.itemsPerPage
         let offset = (page - 1) * per_page;
         let paginatedItems = _.rest(this.state.copyOfData, offset).slice(0, per_page);
         // let ShallowCopyOfList = this.state.data;
-        console.log(paginatedItems);
-        this.setState({
-           data: paginatedItems
-        }, function() {
-          this.state.data = paginatedItems
-          this.forceUpdate()
-        })
-      
+        if (isServerSidePagination) {
+          if (onPaginationCallback) {
+            if (typeof onPaginationCallback === "function") {
+              if (this.state.serverSideSortData.length !== 0) {
+                onPaginationCallback({page: page, itemsPerPage: per_page, sort: defaultSortParameter})
+              } else {
+                onPaginationCallback({page: page, itemsPerPage: per_page, sort: this.state.serverSideSortData})              
+              }
+            }
+          }
+        } else {
+          this.setState({
+            data: paginatedItems
+          }, function() {
+            this.state.data = paginatedItems    
+            this.forceUpdate()
+          })
+        }
       }, function() {
         this.forceUpdate()
       })
@@ -445,11 +597,18 @@ class App extends Component {
   }
 
   _createCheckboxHeader(key, value) {
-    return <input key={key} name="checkboxHeader" type={"checkbox"} onChange={this._selectAll} />
+    return <input key={key} name="checkboxHeader" checked={this.state.allSelected} type={"checkbox"} onChange={this._selectAll} />
   }
 
   _createCheckboxColumn(key, value) {
-    return <input key={key} id={key} name="checkboxColumn" type={"checkbox"} onChange={this._selectColumn} value={value} />
+    let indexOfData = _.findLastIndex(this.state.listOfData, {"_id": key});
+    let isChecked = false;
+    if (indexOfData > -1) {
+      isChecked = true
+    } else {
+      isChecked = false
+    }
+    return <input key={key} id={key} name="checkboxColumn" checked={isChecked} type={"checkbox"} onChange={this._selectColumn} value={value} />
   }
 
   _selectAll(event) {
@@ -473,6 +632,11 @@ class App extends Component {
 
     console.log(data);
 
+    this.setState({
+      allSelected: !this.state.allSelected,
+      listOfData: data
+    })
+
     if ( typeof onCheckedBoxHeaderCallBack === "function") {
       onCheckedBoxHeaderCallBack(event, data);  
     }
@@ -489,24 +653,25 @@ class App extends Component {
       listOfData.splice(indexOfNewData, 1);
       this.setState({
         listOfData: listOfData
-      }) 
+      })
     } else {
       listOfData.push(this.state.data[indexData]);   
       this.setState({
         listOfData: listOfData
-      })    
+      })
     }
 
     console.log(listOfData)
 
-    // - [ ] push data on list
+    // - [x] push data on list
     // - [x] find data on list
-    // - [ ] remove data on list
+    // - [x] remove data on list
 
   }
 
   _createCell(column, props) {
     
+    let self = this;
     if (column.type === "text") {
       return <Cell> {this.state.data[props.rowIndex][column.name]} </Cell>
     }
@@ -520,19 +685,58 @@ class App extends Component {
         </LinkCell>
       )
     }
+    
+   
 
-    console.log(props)
+  }
+
+  _copyToClipBoard() {
+    // var textRange = document.createRange(); 
+    // console.log(textRange);
+    let arr = []
+    this.state.copyOfColumnOrder.map(function(data, index) {
+      if (data.name === "") {
+
+      } else {
+        arr.push(data.name)
+      }
+    })
+
+    // // console.log(arr[0].toString());
+
+    // for (let listIndex = 0; listIndex < arr.length; listIndex++) {
+    //   // const element = array[index];
+    //   console.log(arr[listIndex])
+    //   for (let dataIndex = 0; dataIndex < this.state.data.length; dataIndex++) {
+        
+    //     console.log(this.state.data[dataIndex][arr[listIndex]])
+    //   }
+    // }
+
+    return json2csv({data:this.state.data, fields: arr})
+    // textRange.moveToElementText(document.getElementById("f4DataTable")); 
+    // textRange.execCommand("Copy");
+  }
+
+
+
+  _clickAbstractCell(props, event) {
+    
+
   }
 
   render() {
     const self = this;
+    this.props.dataTableRef(self);
+    
     return (
       <div 
         className="App"
         onKeyDown={this._keyDown}
         onKeyUp={this._keyUp}
       >
-        <DataTable 
+        <DataTable
+          id="f4DataTable"
           headerHeight={this.props.headerHeight} 
           rowsCount={this.state.data.length} 
           onColumnReorderEndCallback={this._onColumnReorderEndCallback}
@@ -541,6 +745,7 @@ class App extends Component {
           rowExpanded={this._rowExpandedGetter}
           rowHeight={this.props.rowHeight}
           isColumnReordering={false} 
+          isColumnResizing={false}
           width={this.props.tableWidth} 
           height={this.props.tableHeight}
           {...this.props}>
@@ -576,6 +781,7 @@ class App extends Component {
               columnKey={columnKey.name}
               key={index}
               isReorderable={columnKey.isReorderable}
+              isResizable={columnKey.isResizable}
               width={columnKey.width}
               fixed={columnKey.fixed}
               header={
@@ -590,7 +796,7 @@ class App extends Component {
                   </span>    
                 </Cell>
               }
-              cell={self._createCell.bind(self, columnKey,)}
+              cell={(columnKey.cell) ? columnKey.cell : self._createCell.bind(self, columnKey)}
 
               />
             );
@@ -604,9 +810,11 @@ class App extends Component {
         <div className="pagination">
         <input type="number" onChange={this._handleInputPagination} />
           <select onChange={this._handleRowCount} value={this.state.itemsPerPage}>
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={15}>15</option>
+            {
+              _.map(this.props.listOfItemPerPage, function(data, index) {
+                return <option key={index} value={data.value}>{data.text}</option>
+              })  
+            }
           </select>        
 
           {(Math.ceil(this.state.data.length) === 0) ? null :
@@ -622,15 +830,17 @@ class App extends Component {
             />  
           }         
         </div>
+        <p>{"Selected " + this.state.listOfData.length + ", Total Items " + this.state.copyOfData.length }</p>
+        <Clipboard option-text={this._copyToClipBoard}>Copy to Clip Board</Clipboard>
         <div className="hide-columns">
           {this._renderFilterService()}
           {this.state.copyOfColumnOrder.map(function(columnKey, index) {
             return (
               <div style={{"textAlign":"left"}} key={index}>
-                  <p>{columnKey.name}</p>
-                  <button onClick={this._showColumn.bind(this, columnKey.name)}>show</button>
-                  <button onClick={this._hideColumn.bind(this, columnKey.name)}>hide</button>
-                  <input type="checkbox" defaultChecked={true} onChange={this._handleShowHide.bind(this, columnKey.name)}/>                 
+                  <p>{columnKey.headerTitle || columnKey.name}</p>
+                  {/* {<button onClick={this._showColumn.bind(this, columnKey.name)}>show</button>
+                  <button onClick={this._hideColumn.bind(this, columnKey.name)}>hide</button>} */}
+                  <input type="checkbox" defaultChecked={columnKey.isNotHidden} onChange={this._handleShowHide.bind(this, columnKey.name)}/>                 
               </div>
             );
           }, this)}
